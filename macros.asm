@@ -78,7 +78,7 @@ imprimirNum16B MACRO num_imp
       inc contDigitosImp
    jmp cfor5
    salfor5:
-   imprimir separador
+   imprimir espacio_
 ENDM
 ;///////////////////////////////// macro que inserta un valor en el vector, indice en el que se le indique 8 bits
 insertarVector macro vector,indice,valor
@@ -130,6 +130,7 @@ obtenerValorVector16Bits macro valor, vector,indice
     mov valor,bx        ;se guarda el valor leido de dl a la variable temporal valVector
 endm
 
+;///////////////////////////////// macro que muestra los valores de un vector de 16 bits
 mostrarVector macro vector,tamVector
    local for,finFor
    mov contadorFor,0d
@@ -146,6 +147,27 @@ mostrarVector macro vector,tamVector
    finFor:  
 endm
 
+;///////////////////////////////// macro que copia los valores de un vector1 al vector 2 ambos de 16 bits
+copiarVector macro vec1,vec2
+    local for,finFor
+    mov contadorFor,0d
+    mov valVector,0d
+    mov bx,N 
+    mov si,0d
+    for:
+       cmp contadorFor,bx
+       jge finFor
+       
+       obtenerValorVector16Bits valVector, vec1,contadorFor
+
+       insertarVector16Bits vec2,contadorFor,valVector 
+       
+       inc contadorFor
+   jmp for
+   finFor:
+endm
+
+;///////////////////////////////// macro que guarda valores de un vector de ascii a un vector de numeros binarios de 16 bits
 guardarNumeros MACRO
   local for,finFor,obtenerNumero,continuarCiclo,for2,finFor2
     
@@ -208,5 +230,63 @@ guardarNumeros MACRO
       inc contadorI
       jmp for
     finFor:
-        
+  
+  ;//////////////APLICANDO ORDENAMIENTO
+  ordenarBurbuja
+
 ENDM 
+
+;/////////////////////////////////MACRO QUE HACE EL ORDENAMIENTO BURBUJA ASCENDENTE
+ordenarBurbuja macro 
+	local for,for2,finFor,finFor2,intercambio,finIf
+
+    mov contadorForBurbuja,0d
+
+	for:
+		mov cx,contVector
+		cmp contadorForBurbuja,cx
+		jge finFor
+
+		mov contadorForBurbuja2,0d
+		
+		for2:
+		mov bx,contVector
+		sub bx,contadorForBurbuja
+		sub bx,1d
+		
+		cmp contadorForBurbuja2,bx
+		jge finFor2
+
+			obtenerValorVector16Bits temp, vecNumeros,contadorForBurbuja2
+
+			mov bx,contadorForBurbuja2
+			add bx,1d
+			mov posSig,bx
+			
+			obtenerValorVector16Bits temp2, vecNumeros,posSig
+			
+			and bx,0d
+			mov bx,temp2
+			
+			cmp temp,bx
+			jg  intercambio
+			jmp finIf
+			
+			intercambio:
+
+				insertarVector16Bits  vecNumeros, contadorForBurbuja2, temp2
+				insertarVector16Bits  vecNumeros, posSig, temp
+
+			finIf:
+
+		inc contadorForBurbuja2
+		jmp for2
+		
+		finFor2:  
+	
+	inc contadorForBurbuja
+	jmp for
+	
+	finFor:
+
+endm

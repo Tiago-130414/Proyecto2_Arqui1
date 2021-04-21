@@ -42,6 +42,7 @@ include macros.asm
     texto                       db  2 dup('$')
     msjErrorApertura  db 'Error: No se pudo abrir el archivo','$'
     msjErrorLectura   db 'Error: No se completo lectura de archivo','$'
+    espacio_          db ' ','$'
     handler           dw ?
     boolErrorLectura  db 0d
     separador         db ',','$' 
@@ -59,13 +60,25 @@ include macros.asm
     contDigitosImp    dw 0
     numResultado      dw 0
     ;////PARA GUARDAR NUMEROS EN VECTOR BINARIO
-    vecNumeros        dw 500 dup('$')
+    vecNumeros        dw 500 dup('$')     ;vector original de numeros   
+    vecNumerosCopia   dw 500 dup('$')     ;vector copia para comandos
     contVector        dw 0d               ;contador para insertar valores en vecNumeros
     contPila          dw 0d               ;cuenta los caracteres ingresados a la pila
     val               db 0d
     numTemp           dw 0d
     contadorI         dw 0d
-    multiplicador     dw 0d
+    multiplicador     dw 0d 
+    ;////VARIABLES PARA ORDENAMIENTO DE VECTOR (ORDENAMIENTO BURBUJA)
+    contadorForBurbuja        dw 0d
+    contadorForBurbuja2       dw 0d
+    temp              dw 0d               ;guarda el valor temporalmente
+    temp2             dw 0d               ;guarda el valor temporalmente
+    posSig            dw 0d               ;guarda la posicion siguiente j+1 
+    ;////VARIABLE PARA COMANDO MAX y MIN
+    val_max           dw 0d
+    val_min           dw 0d
+    posValMax_Min     dw 0d
+    msjErrorValMax_Min     db 'Error: Vector de numeros vacio','$'
 .code 
 
 ;/////////////////////////////////
@@ -89,9 +102,11 @@ compararCadenas macro comando_a_evaluar
     ;limpiando variables y registros
     mov si,0d
     mov di,0d
+    xor ax,ax
+    xor cx,cx
     mov comandosIguales, 0d ;variable booleana que indica si son iguales o no
 
-    push ES
+    ;push ES
     
     mov ax,ds
     mov ES,ax
@@ -102,7 +117,7 @@ compararCadenas macro comando_a_evaluar
     repe cmpsb
     jne diferentes
 
-   pop ES
+   ;pop ES
     
     iguales:
         mov comandosIguales,1d
@@ -147,7 +162,6 @@ main proc
             mov si,contadorCaracteresComando               ;etiqueta de salida de la lectura del comando
             mov comando[si],'$'                            ;se guarda en el vector el caracter de finalizacion    
         
-        impS
         ;---COMANDO LIMPIAR
         compararCadenas strLimpiar
         cmp comandosIguales,1d
@@ -156,7 +170,17 @@ main proc
         ;---COMANDO INFO
         compararCadenas strInfo
         cmp comandosIguales,1d
-        je comando_info
+        je comando_info 
+        
+        ;---COMANDO CMAX 
+        compararCadenas strMax
+        cmp comandosIguales,1d
+        je comando_max
+        
+        ;---COMANDO CMIN 
+        compararCadenas strMin
+        cmp comandosIguales,1d
+        je comando_min
         
         ;---COMANDO SALIR 
         compararCadenas strSalir
@@ -303,15 +327,27 @@ main proc
     
             errorApertura:
                 imprimir msjErrorApertura       ;si dio error al leer ruta o comprobar archivo se imprime error
+                impS
                 pausa                           ;se da pausa para visualizar el error
-    
+                jmp salirAb
+                
             fin_lecturaAR:
+            
+            cmp boolErrorLectura,1d
+            je salirAb
                      
             mov si,posVector                    ;se obtiene la ultima posicion libre del vector segun el contador
             mov vecTempNumeros[si],'$'          ;se coloca caracter de finalizacion en el vector
            
             guardarNumeros
+            imprimir strConsola
             mostrarVector vecNumeros,contVector
+            impS
+            
+            salirAb:
+                
+            
+            
         jmp menu
     ;/////////////PARA COMANDO LIMPIAR
     comando_limpiar:
@@ -324,6 +360,43 @@ main proc
         impS
         imprimir strEncabezado
         jmp menu
+    ;/////////////PARA COMANDO MAX    
+    comando_max:
+         ;////VARIABLE PARA COMANDO MAX
+         ;val_max           dw 0d
+         ;////VARIABLE PARA COMANDO MIN
+         ;val_min           dw 0d 
+        mov posValMax_Min,0d 
+        mov ax,contVector
+        sub ax,1
+        mov posValMax_Min,ax
+        xor ax,ax
+        
+         
+        cmp posValMax_Min,0d
+        jl  com_max_sal 
+         
+         
+        imprimir strConsola
+        obtenerValorVector16Bits val_max, vecNumeros,posValMax_Min
+        imprimirNum16B val_max
+        impS
+        jmp menu
+        
+        com_max_sal:
+            imprimir msjErrorValMax_Min
+            impS
+            pausa
+        jmp menu                  
+        
+    ;/////////////PARA COMANDO MIN    
+    comando_min:
+        mov posValMax_Min,0d 
+        imprimir strConsola
+        obtenerValorVector16Bits val_max, vecNumeros,posValMax_Min
+        imprimirNum16B val_max
+        impS
+        jmp menu 
     
     ;/////////////ERROR DE COMANDO
     error_comando:

@@ -46,6 +46,7 @@ include macros.asm
     handler           dw ?
     boolErrorLectura  db 0d
     separador         db ',','$' 
+    puntoDec          db '.','$'
     digitosIngresados dw 0d               ;contador de digitos ingresados
     posVector         dw 0d               ;contador que me indica la posicion libre del vector temporal de numeros
     posTempVector     dw 0d               ;contador temporal que se multiplica para guardar el binario
@@ -79,6 +80,29 @@ include macros.asm
     val_min           dw 0d
     posValMax_Min     dw 0d
     msjErrorValMax_Min     db 'Error: Vector de numeros vacio','$'
+    ;////VARIABLES PARA PROMEDIO
+    contForSumaProm   dw 0d
+    valSumarProm      dw 0d
+    sumaProm          dw 0d
+    parteEntera       dw 0d
+    parteDecimal      dw 0d
+    decimal           dw 0d
+    residuo           dw 0d
+    contForDecimales  dw 0d
+    contForFormarDec  dw 0d
+    multiploDecimales dw 0d ;multiplica el numero para obtener el valor completo
+    ;////VARIABLES PARA TABLA DE FRECUENCIAS
+    tablaFrecuencias  dw 500 dup ('$')
+    numeroFrecuencia  dw 500 dup ('$')
+    contadorForFrec   dw 0d
+    contForFrecSig    dw 0d
+    valorFrecuencia   dw 0d 
+    valorFrecuencia2  dw 0d
+    repitoFrecuencia  dw 0d ;valor que guarda la repitencia
+    contFrecuencias   dw 0d
+    impFrec           dw 0d
+    impRepi           dw 0d
+    c_escape          dw '$'
 .code 
 
 ;/////////////////////////////////
@@ -182,6 +206,17 @@ main proc
         cmp comandosIguales,1d
         je comando_min
         
+        ;---COMANDO CPROM 
+        compararCadenas strPromedio
+        cmp comandosIguales,1d
+        je comando_prom
+        
+        ;---COMANDO TABLAFRECUENCIAS (CAMBIAR A MODA)
+        compararCadenas strModa
+        cmp comandosIguales,1d
+        je  tablaFrecuenciasEj
+        
+        
         ;---COMANDO SALIR 
         compararCadenas strSalir
         cmp comandosIguales,1d
@@ -234,6 +269,7 @@ main proc
             and cx,0d           
             mov contadorLetrasAbrir,6d
             mov contVectRuta,0d
+            mov posVector,0d
             
             for_abrir:
                 mov cx,contadorCaracteresComando
@@ -362,10 +398,6 @@ main proc
         jmp menu
     ;/////////////PARA COMANDO MAX    
     comando_max:
-         ;////VARIABLE PARA COMANDO MAX
-         ;val_max           dw 0d
-         ;////VARIABLE PARA COMANDO MIN
-         ;val_min           dw 0d 
         mov posValMax_Min,0d 
         mov ax,contVector
         sub ax,1
@@ -397,7 +429,12 @@ main proc
         imprimirNum16B val_max
         impS
         jmp menu 
-    
+    ;/////////////PARA COMANDO PROMEDIO
+    comando_prom:
+        sumarNumerosVector
+        hacerPromedio
+        pausa
+        jmp menu
     ;/////////////ERROR DE COMANDO
     error_comando:
         imprimir strConsola
@@ -410,5 +447,50 @@ main proc
     salir:
         .exit
     
+    tablaFrecuenciasEj:
+        mov contadorForFrec,0d
+        mov contForFrecSig,0d
+        mov repitoFrecuencia,1d
+        mov contFrecuencias,0d
+        for:
+            and cx,0d
+            mov cx,contVector
+            cmp contadorForFrec,cx 
+            jge finFor
+            
+            and ax,0d
+            mov ax,contadorForFrec
+            mov contForFrecSig,ax
+            add contForFrecSig,1d
+
+            obtenerValorVector16Bits valorFrecuencia, vecNumeros,contadorForFrec
+            obtenerValorVector16Bits valorFrecuencia2, vecNumeros,contForFrecSig
+            
+            and ax,0d
+            mov ax,valorFrecuencia2
+            cmp valorFrecuencia,ax
+            je son_iguales
+            jmp no_son_iguales
+            
+            son_iguales:
+                inc repitoFrecuencia
+                jmp continuar_frec
+            
+            no_son_iguales:
+                insertarVector16Bits tablaFrecuencias,contFrecuencias,repitoFrecuencia
+                insertarVector16Bits numeroFrecuencia,contFrecuencias,valorFrecuencia
+                mov repitoFrecuencia,1d
+                inc contFrecuencias
+            continuar_frec:
+            inc contadorForFrec
+            jmp for
+                
+        finFor:
+           
+           ;insertarVector16Bits tablaFrecuencias,contFrecuencias,c_escape
+           ;insertarVector16Bits numeroFrecuencia,contFrecuencias,c_escape
+           mostrarTabla contFrecuencias
+
+        .exit
 main endp
 end main

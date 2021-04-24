@@ -426,9 +426,52 @@ generarTablaFrecuencia macro
         and ax,0d
         mov ax,contadorForFrec2
         mov contadorForFrec,ax
-        ;inc contadorForFrec
         jmp for
     finFor:
+endm
+
+;///////////////////////////////// macro que hace la tabla de frecuencias
+realizarFrecuencias macro 
+    local for,finFor,son_iguales,no_son_iguales,continuar_frec
+    mov contadorForFrec,0d
+    mov contForFrecSig,0d
+    mov repitoFrecuencia,1d
+    mov contFrecuencias,0d
+    for:
+        and cx,0d
+        mov cx,contVector
+        cmp contadorForFrec,cx 
+        jge finFor
+        
+        and ax,0d
+        mov ax,contadorForFrec
+        mov contForFrecSig,ax
+        add contForFrecSig,1d
+
+        obtenerValorVector16Bits valorFrecuencia, vecNumeros,contadorForFrec
+        obtenerValorVector16Bits valorFrecuencia2, vecNumeros,contForFrecSig
+        
+        and ax,0d
+        mov ax,valorFrecuencia2
+        cmp valorFrecuencia,ax
+        je son_iguales
+        jmp no_son_iguales
+        
+        son_iguales:
+            inc repitoFrecuencia
+            jmp continuar_frec
+        
+        no_son_iguales:
+            insertarVector16Bits tablaFrecuencias,contFrecuencias,repitoFrecuencia
+            insertarVector16Bits numeroFrecuencia,contFrecuencias,valorFrecuencia
+            mov repitoFrecuencia,1d
+            inc contFrecuencias
+        continuar_frec:
+        inc contadorForFrec
+        jmp for
+            
+    finFor:
+        ;mostrarTabla contFrecuencias
 endm
 
 ;///////////////////////////////// macro que muestra los valores de la tabla de frecuencias
@@ -451,4 +494,144 @@ mostrarTabla macro cont
        inc contadorFor
    jmp for
    finFor:  
+endm
+
+;///////////////////////////////// macro que ordena tabla de frecuencias por frecuencia
+
+comando_moda macro moda_ret,tamFrec
+local for,for2,finFor,finFor2,intercambio,finIf
+
+    mov contadorForBurbuja,0d
+    for:
+        and cx,0d
+        mov cx,tamFrec
+        cmp contadorForBurbuja,cx
+        jge finFor
+
+        mov contadorForBurbuja2,0d
+        
+        for2:
+        and bx,0d
+        mov bx,tamFrec
+        sub bx,contadorForBurbuja
+        sub bx,1d
+        
+        cmp contadorForBurbuja2,bx
+        jge finFor2
+
+            obtenerValorVector16Bits val_frec, tablaFrecuencias,contadorForBurbuja2
+            obtenerValorVector16Bits val_num, numeroFrecuencia,contadorForBurbuja2
+            
+            and bx,0d
+            mov bx,contadorForBurbuja2
+            add bx,1d
+            mov posSig,bx
+            
+            obtenerValorVector16Bits val_frec2, tablaFrecuencias,posSig
+            obtenerValorVector16Bits val_num2, numeroFrecuencia,posSig
+
+            and bx,0d
+            mov bx,val_frec2
+            
+            cmp val_frec,bx
+            jg  intercambio
+            jmp finIf
+            
+            intercambio:
+
+                insertarVector16Bits  tablaFrecuencias, contadorForBurbuja2, val_frec2
+                insertarVector16Bits  tablaFrecuencias, posSig, val_frec
+
+                insertarVector16Bits  numeroFrecuencia, contadorForBurbuja2, val_num2
+                insertarVector16Bits  numeroFrecuencia, posSig, val_num
+
+            finIf:
+
+        inc contadorForBurbuja2
+        jmp for2
+        
+        finFor2:  
+    
+    inc contadorForBurbuja
+    jmp for
+    
+    finFor: 
+
+    and ax,0d
+    mov ax,tamFrec
+    sub ax,1d
+    mov posModa,ax
+    obtenerValorVector16Bits moda_ret, numeroFrecuencia,posModa
+endm
+
+;///////////////////////////////// macro que hace la division cuando el numero es par
+dividirNumero macro v1,v2
+    local for,finFor,for2,finFor2
+
+    mov parteEntera,0d
+    mov residuo,0d
+    and ax,0d
+    and bx,0d
+
+    mov ax,v1     ;dividendo
+    mov bx,v2     ;divisor
+    ;cwd                 ;expandiendo registro
+    div bx              ;dividiendo ax/bx
+
+    mov parteEntera,ax           ;cociente = 1 (parte entera)
+    mov residuo,dx
+    mov contForDecimales,0d
+
+    for:
+        and ax,0d
+        mov ax,residuo
+        cmp contForDecimales,3d
+        jge finFor
+        
+        and bx,0d           ;limpio bx
+        mov bx,10d
+        mul bx              ;multiplico ax*bx
+                            ;en ax esta lo que quiero dividir primera iteracion es 30
+        
+        and bx,0d           ;limpio bx
+        mov bx,v2   ;copio el divisor
+        div bx              ;divido el residuo anterior con el divisor
+        mov decimal,ax      ;variable para que se vea el decimal
+        mov residuo,dx      ;variable en la que se lleva el residuo
+        push ax             ;guardando en la pila el decimal
+
+        inc contForDecimales 
+        jmp for
+    finFor:
+
+    ;////FOR PARA FORMAR LOS DECIMALES
+    mov contForFormarDec,0d
+    mov parteDecimal,0d
+    mov multiploDecimales,1d
+    for2:
+        cmp contForFormarDec,3d
+        je finFor2
+
+        and ax,0d
+        and bx,0d
+        pop ax
+        mov bx,multiploDecimales
+        mul bx
+        adc parteDecimal,ax
+
+        and ax,0d
+        and bx,0d
+        mov ax,multiploDecimales
+        mov bx,10d
+        mul bx
+        mov multiploDecimales,ax
+        inc contForFormarDec
+        jmp for2
+    finFor2:
+    imprimir strConsola
+    imprimirNum16B parteEntera
+    imprimir puntoDec
+    imprimirNum16B parteDecimal
+    impS
+
 endm

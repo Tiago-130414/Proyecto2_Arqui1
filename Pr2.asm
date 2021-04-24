@@ -103,6 +103,22 @@ include macros.asm
     impFrec           dw 0d
     impRepi           dw 0d
     c_escape          dw '$'
+    ;////VARIABLES PARA MODA
+    val_frec          dw 0d   ;frecuencia1  sirve para ordenar tabla de frecuencias por frecuencia
+    val_frec2         dw 0d   ;frecuencia2  sirve para ordenar tabla de frecuencias por frecuencia
+    val_num           dw 0d   ;numero1      sirve para ordenar tabla de frecuencias por frecuencia
+    val_num2          dw 0d   ;numero2      sirve para ordenar tabla de frecuencias por frecuencia
+    posModa           dw 0d   ;guarda la posicion en la tabla de frecuencias de la moda
+    valModa           dw 0d   ;guarda el valor de la moda
+    ;////VARIABLES PARA MEDIANA
+    par_impar         dw 0d   ;variable que me dice si es par o impar
+    pos_mediana       dw 0d
+    ind_sup           dw 0d
+    val1_med          dw 0d
+    val2_med          dw 0d
+    sum_med           dw 0d
+    divi_med          dw 2d
+
 .code 
 
 ;/////////////////////////////////
@@ -211,10 +227,15 @@ main proc
         cmp comandosIguales,1d
         je comando_prom
         
-        ;---COMANDO TABLAFRECUENCIAS (CAMBIAR A MODA)
+        ;---COMANDO MEDIANA
+        compararCadenas strMediana
+        cmp comandosIguales,1d
+        je  comando_cmediana
+        
+        ;---COMANDO MODA
         compararCadenas strModa
         cmp comandosIguales,1d
-        je  tablaFrecuenciasEj
+        je  comando_cmoda
         
         
         ;---COMANDO SALIR 
@@ -382,8 +403,6 @@ main proc
             
             salirAb:
                 
-            
-            
         jmp menu
     ;/////////////PARA COMANDO LIMPIAR
     comando_limpiar:
@@ -435,6 +454,65 @@ main proc
         hacerPromedio
         pausa
         jmp menu
+    ;/////////////PARA COMANDO MODA
+    comando_cmoda:
+        realizarFrecuencias                     ;realizando tabla de frecuencias
+        comando_moda valModa,contFrecuencias    ;realizando ordenamiento para moda
+        imprimir strConsola                     ;imprimiendo valores
+        imprimirNum16B valModa
+        impS
+        jmp menu
+    
+    ;/////////////PARA COMANDO MEDIANA    
+    comando_cmediana:
+        and ax,0d
+        and dx,0d
+        and bx,0d
+        
+        mov ax,contVector
+        mov bx,2d
+        div bx
+        mov par_impar,dx
+        mov pos_mediana,ax
+        
+        mov val1_med, 0d
+        mov val2_med, 0d
+        
+        cmp par_impar,0d
+        je soy_par_med
+        jmp soy_impar_med
+        
+        soy_par_med:
+                     
+            and ax,0d
+            mov ax,pos_mediana
+            add ax,1d
+            mov ind_sup,ax          
+            
+            obtenerValorVector16Bits val1_med, vecNumeros,pos_mediana
+            obtenerValorVector16Bits val2_med, vecNumeros,ind_sup
+            
+            and ax,0d
+            mov ax,val1_med
+            add ax,val2_med
+            mov sum_med,ax
+            
+            dividirNumero sum_med,2d
+            
+            jmp fin_mediana
+            
+        soy_impar_med:
+            
+            obtenerValorVector16Bits val1_med, vecNumeros,pos_mediana
+            imprimir strConsola                     ;imprimiendo valores
+            imprimirNum16B val1_med
+            impS
+
+        fin_mediana:
+
+        
+        pausa
+        jmp menu
     ;/////////////ERROR DE COMANDO
     error_comando:
         imprimir strConsola
@@ -447,50 +525,6 @@ main proc
     salir:
         .exit
     
-    tablaFrecuenciasEj:
-        mov contadorForFrec,0d
-        mov contForFrecSig,0d
-        mov repitoFrecuencia,1d
-        mov contFrecuencias,0d
-        for:
-            and cx,0d
-            mov cx,contVector
-            cmp contadorForFrec,cx 
-            jge finFor
-            
-            and ax,0d
-            mov ax,contadorForFrec
-            mov contForFrecSig,ax
-            add contForFrecSig,1d
-
-            obtenerValorVector16Bits valorFrecuencia, vecNumeros,contadorForFrec
-            obtenerValorVector16Bits valorFrecuencia2, vecNumeros,contForFrecSig
-            
-            and ax,0d
-            mov ax,valorFrecuencia2
-            cmp valorFrecuencia,ax
-            je son_iguales
-            jmp no_son_iguales
-            
-            son_iguales:
-                inc repitoFrecuencia
-                jmp continuar_frec
-            
-            no_son_iguales:
-                insertarVector16Bits tablaFrecuencias,contFrecuencias,repitoFrecuencia
-                insertarVector16Bits numeroFrecuencia,contFrecuencias,valorFrecuencia
-                mov repitoFrecuencia,1d
-                inc contFrecuencias
-            continuar_frec:
-            inc contadorForFrec
-            jmp for
-                
-        finFor:
-           
-           ;insertarVector16Bits tablaFrecuencias,contFrecuencias,c_escape
-           ;insertarVector16Bits numeroFrecuencia,contFrecuencias,c_escape
-           mostrarTabla contFrecuencias
-
-        .exit
+       
 main endp
 end main

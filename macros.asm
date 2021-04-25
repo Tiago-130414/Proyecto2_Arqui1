@@ -311,6 +311,9 @@ endm
 hacerPromedio macro
     local for,finFor,for2,finFor2
 
+                ;valor_promedio    dw 0d
+            ;valor_dec_prom    dw 0d
+
     mov parteEntera,0d
     mov residuo,0d
     and ax,0d
@@ -322,6 +325,7 @@ hacerPromedio macro
     div bx              ;dividiendo ax/bx
 
     mov parteEntera,ax           ;cociente = 1 (parte entera)
+    mov valor_promedio,ax
     mov residuo,dx
     mov contForDecimales,0d
 
@@ -371,6 +375,11 @@ hacerPromedio macro
         inc contForFormarDec
         jmp for2
     finFor2:
+
+    and ax,0d
+    mov ax,parteDecimal
+    mov valor_dec_prom,ax
+
     imprimir strConsola
     imprimirNum16B parteEntera
     imprimir puntoDec
@@ -429,6 +438,7 @@ generarTablaFrecuencia macro
         jmp for
     finFor:
 endm
+
 
 ;///////////////////////////////// macro que hace la tabla de frecuencias
 realizarFrecuencias macro 
@@ -497,7 +507,6 @@ mostrarTabla macro cont
 endm
 
 ;///////////////////////////////// macro que ordena tabla de frecuencias por frecuencia
-
 comando_moda macro moda_ret,tamFrec
 local for,for2,finFor,finFor2,intercambio,finIf
 
@@ -579,6 +588,7 @@ dividirNumero macro v1,v2
     div bx              ;dividiendo ax/bx
 
     mov parteEntera,ax           ;cociente = 1 (parte entera)
+    mov valor_mediana,ax
     mov residuo,dx
     mov contForDecimales,0d
 
@@ -627,11 +637,132 @@ dividirNumero macro v1,v2
         mov multiploDecimales,ax
         inc contForFormarDec
         jmp for2
+    
     finFor2:
+
+    and ax,0d
+    mov ax,parteDecimal
+    mov valor_dec_med,ax
+
     imprimir strConsola
     imprimirNum16B parteEntera
     imprimir puntoDec
     imprimirNum16B parteDecimal
     impS
-
 endm
+
+;///////////////////////////////// macro que escribe en el archivo
+escribirArchivo macro cadena,tam
+     mov ah,40h
+     mov bx,handler2
+     mov cx,tam ;//numero de bytes que se van a escribir en el archivo   
+     mov dx,offset cadena
+     int 21h        
+endm
+
+;///////////////////////////////// macro que escribe un numero de 16 bits en el reporte
+escribirBinarioReporte16B macro num_imp
+  local  dowhile, saldowhile ,cfor5 ,salfor5
+    
+; DOWHILE
+   mov ax,0d
+   mov ax,num_imp
+   mov auxImpPila,0 
+   dowhile:
+     
+     and dx,0
+     mov cx,10d
+
+     div cx
+     inc auxImpPila
+     push dx
+        
+     cmp ax, 0d
+     jne dowhile
+     jmp saldowhile
+
+   saldowhile:  
+   
+   ; CICLO FOR
+   mov cx, auxImpPila
+   mov contDigitosImp, 0
+   mov numResultado,0
+   
+   cfor5:
+      cmp contDigitosImp, cx
+      jge salfor5
+      pop ax
+      mov numResultado,ax
+      add numResultado,30h
+      
+      escribirArchivo  numResultado,1
+      
+      mov cx, auxImpPila
+      inc contDigitosImp
+   jmp cfor5
+   salfor5:
+endm
+
+;///////////////////////////////// macro que escribe un numero de 8 bits en el reporte
+escribirBinarioReporte macro num_imp
+  local  dowhile, saldowhile ,cfor5 ,salfor5
+    
+; DOWHILE
+   mov ax,0d
+   mov al,num_imp
+   mov auxImpPila,0 
+   dowhile:
+     
+     and dx,0
+     mov cx,10d
+
+     div cx
+     inc auxImpPila
+     push dx
+        
+     cmp ax, 0d
+     jne dowhile
+     jmp saldowhile
+
+   saldowhile:    
+     
+   ; CICLO FOR
+   mov cx, auxImpPila
+   mov contDigitosImp, 0
+   mov numResultado,0
+   
+   cfor5:
+      cmp contDigitosImp, cx
+      jge salfor5
+      pop ax
+      mov numResultado,ax
+      add numResultado,30h
+      escribirArchivo  numResultado,1
+      mov cx, auxImpPila
+      inc contDigitosImp
+   jmp cfor5
+   salfor5:
+endm
+
+;///////////////////////////////// macro que muestra los valores de la tabla de frecuencias
+escribirTabla macro cont
+   local for,finFor
+   mov contadorFor,0d
+   for:
+       mov bx,cont
+       cmp contadorFor,bx
+       jge finFor
+
+       obtenerValorVector16Bits impFrec, tablaFrecuencias,contadorFor
+       obtenerValorVector16Bits impRepi, numeroFrecuencia,contadorFor
+
+        escribirBinarioReporte16B impFrec
+        escribirArchivo strTabulacionR,4d
+        escribirBinarioReporte16B impRepi
+        escribirArchivo strSaltoAr,1d
+       
+       inc contadorFor
+   jmp for
+   finFor:  
+endm
+

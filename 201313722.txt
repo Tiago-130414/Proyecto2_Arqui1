@@ -1,0 +1,1 @@
+PROYECTO 2 ASSEMBLERSantiago Gilberto Antonio Rivadeneira Ruano20131372224/4/202119:43:11Promedio: 10.312Mediana: 10.0Moda: 3Maximo: 20Minimo: 1Tabla De Frecuencias: 15    518    1218    1819    1621    1122    123    1025    825    925    2026    226    1527    1727    1928    628    730    430    1431    1336    3

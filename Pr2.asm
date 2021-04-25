@@ -91,6 +91,8 @@ include macros.asm
     contForDecimales  dw 0d
     contForFormarDec  dw 0d
     multiploDecimales dw 0d ;multiplica el numero para obtener el valor completo
+    valor_promedio    dw 0d
+    valor_dec_prom    dw 0d
     ;////VARIABLES PARA TABLA DE FRECUENCIAS
     tablaFrecuencias  dw 500 dup ('$')
     numeroFrecuencia  dw 500 dup ('$')
@@ -116,9 +118,34 @@ include macros.asm
     ind_sup           dw 0d
     val1_med          dw 0d
     val2_med          dw 0d
-    sum_med           dw 0d
     divi_med          dw 2d
-
+    valor_mediana     dw 0d
+    valor_dec_med     dw 0d
+    ;////VARIABLES PARA REPORTE
+    direccionArchivo        db '201313722.txt',0
+    handler2                dw ?
+    errorGreporte           db '-> Problema al generar reporte',10,13,'$' 
+    errorEscrituraReporte   db '-> Problema al escribir en el archivo de reporte','$'
+    strEncabezadoR          db  'PROYECTO 2 ASSEMBLER',13,
+                            db  'Santiago Gilberto Antonio Rivadeneira Ruano',13
+                            db  '201313722',13,0
+    strDiagonal             db  '/',0
+    strDosPuntos            db  ':',0
+    strPuntoR               db  '.',0
+    strSaltoAr              db  '',13,0
+    dia                     db  0d 
+    mes                     db  0d
+    ano                     dw  0d
+    hora                    db  0d
+    min                     db  0d
+    seg                     db  0d
+    strPromedioR            db 'Promedio: ',0
+    strMedianaR             db 'Mediana: ',0 
+    strModaR                db 'Moda: ',0 
+    strMaxR                 db 'Maximo: ',0    
+    strMinR                 db 'Minimo: ',0
+    strTablaR               db 'Tabla De Frecuencias: ',13,0 
+    strTabulacionR          db '    ',0
 .code 
 
 ;/////////////////////////////////
@@ -237,7 +264,11 @@ main proc
         cmp comandosIguales,1d
         je  comando_cmoda
         
-        
+        ;---COMANDO REPORTE
+        compararCadenas strReporte
+        cmp comandosIguales,1d
+        je  comando_reporte
+
         ;---COMANDO SALIR 
         compararCadenas strSalir
         cmp comandosIguales,1d
@@ -384,8 +415,7 @@ main proc
     
             errorApertura:
                 imprimir msjErrorApertura       ;si dio error al leer ruta o comprobar archivo se imprime error
-                impS
-                pausa                           ;se da pausa para visualizar el error
+                impS                            
                 jmp salirAb
                 
             fin_lecturaAR:
@@ -437,22 +467,20 @@ main proc
         com_max_sal:
             imprimir msjErrorValMax_Min
             impS
-            pausa
         jmp menu                  
         
     ;/////////////PARA COMANDO MIN    
     comando_min:
         mov posValMax_Min,0d 
         imprimir strConsola
-        obtenerValorVector16Bits val_max, vecNumeros,posValMax_Min
-        imprimirNum16B val_max
+        obtenerValorVector16Bits val_min, vecNumeros,posValMax_Min
+        imprimirNum16B val_min
         impS
         jmp menu 
     ;/////////////PARA COMANDO PROMEDIO
     comando_prom:
         sumarNumerosVector
         hacerPromedio
-        pausa
         jmp menu
     ;/////////////PARA COMANDO MODA
     comando_cmoda:
@@ -477,9 +505,11 @@ main proc
         
         mov val1_med, 0d
         mov val2_med, 0d
+        mov valor_mediana,0d
+        mov valor_dec_med,0d
         
         cmp par_impar,0d
-        je soy_par_med
+        je  soy_par_med
         jmp soy_impar_med
         
         soy_par_med:
@@ -495,30 +525,134 @@ main proc
             and ax,0d
             mov ax,val1_med
             add ax,val2_med
-            mov sum_med,ax
+            mov valor_mediana,ax
             
-            dividirNumero sum_med,2d
+            dividirNumero valor_mediana,2d
             
             jmp fin_mediana
             
         soy_impar_med:
             
-            obtenerValorVector16Bits val1_med, vecNumeros,pos_mediana
+            obtenerValorVector16Bits valor_mediana, vecNumeros,pos_mediana
             imprimir strConsola                     ;imprimiendo valores
-            imprimirNum16B val1_med
+            imprimirNum16B valor_mediana
             impS
 
         fin_mediana:
-
+        jmp menu 
         
-        pausa
+    ;/////////////COMANDO REPORTE
+    comando_reporte:
+            ;creando archivo
+            mov ah,3Ch
+            mov cx,0
+            mov dx,offset direccionArchivo
+            int 21h
+            
+            ;si hay error
+            jc errorReporte
+            mov handler2,ax
+            ;de lo contrario escribo en el archivo
+            
+            ;escribiendo encabezado
+            escribirArchivo strEncabezadoR,75d
+            jc errorEscReporte
+            
+            ;obteniendo fecha
+            mov ah,2Ah
+            int 21h
+ 
+            mov dia,dl
+            mov mes,dh
+            mov ano,cx
+            
+            ;escribiendo fecha en el reporte
+            escribirBinarioReporte dia
+            escribirArchivo strDiagonal,1d
+            escribirBinarioReporte mes
+            escribirArchivo strDiagonal,1d
+            escribirBinarioReporte16B ano
+            escribirArchivo strSaltoAr,1d
+            
+            ;obteniendo hora
+            
+            mov ah,2Ch
+            int 21h
+            
+            mov hora,ch
+            mov min,cl
+            mov seg,dh
+            
+            ;escribiendo hora
+            
+            escribirBinarioReporte hora
+            escribirArchivo strDosPuntos,1d
+            
+            escribirBinarioReporte min
+            escribirArchivo strDosPuntos,1d
+            
+            escribirBinarioReporte seg
+            escribirArchivo strSaltoAr,1d
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo promedio
+            escribirArchivo strPromedioR,10 
+            escribirBinarioReporte16B valor_promedio
+            escribirArchivo strPuntoR,1d
+            escribirBinarioReporte16B valor_dec_prom
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo mediana
+            escribirArchivo strMedianaR,9
+            escribirBinarioReporte16B valor_mediana
+            escribirArchivo strPuntoR,1d
+            escribirBinarioReporte16B valor_dec_med
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo moda
+            escribirArchivo strModaR,6
+            escribirBinarioReporte16B valModa
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo maximo
+            escribirArchivo strMaxR,8
+            escribirBinarioReporte16B val_max
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo minimo
+            escribirArchivo strMinR,8
+            escribirBinarioReporte16B val_min
+            escribirArchivo strSaltoAr,1d
+            escribirArchivo strSaltoAr,1d
+            
+            ;escribiendo tabla de frecuencias
+            escribirArchivo strTablaR,23
+            escribirArchivo strSaltoAr,1d
+            
+            escribirTabla contFrecuencias 
+                     
+            ;cerrando el archivo
+            mov ah,3eh
+            mov bx,handler2
+            int 21h
+                    
+            jmp finalizarReporte
+            
+        errorReporte:
+            imprimir  errorGreporte
+            jmp finalizarReporte
+            
+        errorEscReporte:
+            imprimir errorEscrituraReporte   
+            
+        finalizarReporte:
+                
         jmp menu
     ;/////////////ERROR DE COMANDO
     error_comando:
         imprimir strConsola
         imprimir strErrorComando
         impS
-        pausa
         jmp menu
     
     ;/////////////PARA COMANDO SALIR

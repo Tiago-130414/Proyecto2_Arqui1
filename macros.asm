@@ -35,6 +35,7 @@ impS  MACRO
  lea   dx,strSalto
  int   21h   
 ENDM
+
 ;///////////////////////////////// macro que imprime un numero de 16 bits
 imprimirNum16B MACRO num_imp
    local  dowhile, saldowhile ,cfor5 ,salfor5
@@ -76,6 +77,7 @@ imprimirNum16B MACRO num_imp
    jmp cfor5
    salfor5:
 ENDM
+
 ;///////////////////////////////// macro que inserta un valor en el vector, indice en el que se le indique 8 bits
 insertarVector macro vector,indice,valor
     mov si,0d               ;limpio el iterador si
@@ -439,7 +441,6 @@ generarTablaFrecuencia macro
     finFor:
 endm
 
-
 ;///////////////////////////////// macro que hace la tabla de frecuencias
 realizarFrecuencias macro 
     local for,finFor,son_iguales,no_son_iguales,continuar_frec
@@ -482,6 +483,189 @@ realizarFrecuencias macro
             
     finFor:
         ;mostrarTabla contFrecuencias
+endm
+
+;///////////////////////////////// macro que hace la tabla de frecuencias descendente
+realizarFrecuenciasDesc macro 
+   local for,for2,finFor,finFor2,intercambio,finIf
+
+    mov contadorForBurbuja,0d
+
+	for:
+        and cx,0d
+		mov cx,contFrecuencias
+		cmp contadorForBurbuja,cx
+		jge finFor
+
+		mov contadorForBurbuja2,0d
+		
+		for2:
+        and bx,0d
+		mov bx,contFrecuencias
+		sub bx,contadorForBurbuja
+		sub bx,1d
+		
+		cmp contadorForBurbuja2,bx
+		jge finFor2
+            ;tabla frecuencias - se repiten
+            ;numerofrecuencia - el numero
+			obtenerValorVector16Bits valFrec, tablaFrecuencias,contadorForBurbuja2
+            obtenerValorVector16Bits valNumFrec, numeroFrecuencia,contadorForBurbuja2
+
+            and bx,0d
+			mov bx,contadorForBurbuja2
+			add bx,1d
+			mov posSig,bx
+			
+			obtenerValorVector16Bits valFrec2, tablaFrecuencias,posSig
+			obtenerValorVector16Bits valNumFrec2, numeroFrecuencia,posSig
+			and bx,0d
+			mov bx,valFrec2
+			
+			cmp valFrec,bx
+			jl  intercambio
+			jmp finIf
+			
+			intercambio:
+
+                insertarVector16Bits tablaFrecuencias,contadorForBurbuja2,valFrec2
+                insertarVector16Bits tablaFrecuencias,posSig,valFrec
+
+                insertarVector16Bits numeroFrecuencia,contadorForBurbuja2,valNumFrec2
+                insertarVector16Bits numeroFrecuencia,posSig,valNumFrec
+
+			finIf:
+
+		inc contadorForBurbuja2
+		jmp for2
+		
+		finFor2:  
+	
+	inc contadorForBurbuja
+	jmp for
+	
+	finFor: 
+endm
+
+;///////////////////////////////// macro que hace la tabla de frecuencias descendente
+realizarFrecuenciasAsc macro 
+   local for,for2,finFor,finFor2,intercambio,finIf
+
+    mov contadorForBurbuja,0d
+
+	for:
+        and cx,0d
+		mov cx,contFrecuencias
+		cmp contadorForBurbuja,cx
+		jge finFor
+
+		mov contadorForBurbuja2,0d
+		
+		for2:
+        and bx,0d
+		mov bx,contFrecuencias
+		sub bx,contadorForBurbuja
+		sub bx,1d
+		
+		cmp contadorForBurbuja2,bx
+		jge finFor2
+            ;tabla frecuencias - se repiten
+            ;numerofrecuencia - el numero
+			obtenerValorVector16Bits valFrec, tablaFrecuencias,contadorForBurbuja2
+            obtenerValorVector16Bits valNumFrec, numeroFrecuencia,contadorForBurbuja2
+
+            and bx,0d
+			mov bx,contadorForBurbuja2
+			add bx,1d
+			mov posSig,bx
+			
+			obtenerValorVector16Bits valFrec2, tablaFrecuencias,posSig
+			obtenerValorVector16Bits valNumFrec2, numeroFrecuencia,posSig
+			and bx,0d
+			mov bx,valFrec2
+			
+			cmp valFrec,bx
+			jg  intercambio
+			jmp finIf
+			
+			intercambio:
+
+                insertarVector16Bits tablaFrecuencias,contadorForBurbuja2,valFrec2
+                insertarVector16Bits tablaFrecuencias,posSig,valFrec
+
+                insertarVector16Bits numeroFrecuencia,contadorForBurbuja2,valNumFrec2
+                insertarVector16Bits numeroFrecuencia,posSig,valNumFrec
+
+			finIf:
+
+		inc contadorForBurbuja2
+		jmp for2
+		
+		finFor2:  
+	
+	inc contadorForBurbuja
+	jmp for
+	
+	finFor: 
+endm
+
+;///////////////////////////////// macro que hace la tabla de frecuencias descendente
+realizarHistograma macro 
+   local for,for2,finFor,finFor2,intercambio,finIf
+
+    mov contadorForBurbuja,0d
+
+	for:
+		mov cx,contFrecuencias
+		cmp contadorForBurbuja,cx
+		jge finFor
+
+		mov contadorForBurbuja2,0d
+		
+		for2:
+		mov bx,contFrecuencias
+		sub bx,contadorForBurbuja
+		sub bx,1d
+		
+		cmp contadorForBurbuja2,bx
+		jge finFor2
+            ;tabla frecuencias - se repiten
+            ;numerofrecuencia - el numero
+			obtenerValorVector16Bits valFrec, tablaFrecuencias,contadorForBurbuja2
+            obtenerValorVector16Bits valNumFrec, numeroFrecuencia,contadorForBurbuja2
+
+			mov bx,contadorForBurbuja2
+			add bx,1d
+			mov posSig,bx
+			
+			obtenerValorVector16Bits valFrec2, tablaFrecuencias,posSig
+			obtenerValorVector16Bits valNumFrec2, numeroFrecuencia,posSig
+			and bx,0d
+			mov bx,valNumFrec2
+			
+			cmp valNumFrec,bx
+			jg  intercambio
+			jmp finIf
+			
+			intercambio:
+
+                insertarVector16Bits tablaFrecuencias,contadorForBurbuja2,valFrec2
+                insertarVector16Bits tablaFrecuencias,posSig,valFrec
+
+                insertarVector16Bits numeroFrecuencia,contadorForBurbuja2,valNumFrec2
+                insertarVector16Bits numeroFrecuencia,posSig,valNumFrec
+
+			finIf:
+
+		inc contadorForBurbuja2
+		jmp for2
+		
+		finFor2:  
+	
+	inc contadorForBurbuja
+	jmp for
+	
+	finFor: 
 endm
 
 ;///////////////////////////////// macro que muestra los valores de la tabla de frecuencias
@@ -766,3 +950,257 @@ escribirTabla macro cont
    finFor:  
 endm
 
+;///////////////////////////////// macro que pinta un pixel sobre el modo de video
+pintar macro posX,posY,color                
+  and ax,0d
+  and cx,0d
+  and dx,0d
+  mov al, color   ;asignando el color
+  mov cx, posX    ;asignando la columna - X
+  mov dx, 199d    ;479d,199d
+  sub dx, posY    ;asignando la fila - y
+  mov ah, 0ch     ;cambio de color al pixel
+  int 10h         ;pintando pixel.    
+endm
+
+;///////////////////////////////// macro que escribe un rectangulo sobre el modo de video, pintando pixel por pixel
+crearRectangulo macro posX2,posY2,ancho2,alto2,color2    
+    local for,finFor,for2,finFor2  
+    
+    ;a los contadores les tengo que asignar posX y posY
+    ;ancho y alto son los limites de mis ciclos
+
+    and ax,0d                                             
+    and bx,0d
+    and cx,0d
+    and dx,0d
+    
+    mov anchoTemp,0d
+    mov altoTemp,0d
+    mov contadorFor3,0d
+    mov contadorFor5,0d
+
+    ;pos inicial x
+    mov bx,posX2
+    mov contadorFor3,bx
+
+    ;pos final x
+    add bx,ancho2
+    mov anchoTemp,bx
+
+    ;pos inicial Y
+    and bx,0d
+    mov bx,posY2
+
+    ;pos final y
+    add bx,alto2
+    mov altoTemp,bx
+
+    xor bx,bx
+    mov bx,anchoTemp
+    for:
+        
+        cmp contadorFor3, bx
+        jge finFor
+
+        ;pintar contadorFor3,300,colorBlanco
+
+        
+        and ax,0d
+        mov ax,posY2
+        mov contadorFor5,0d
+        mov contadorFor5,ax
+        for2:
+            and ax,0d
+            mov ax,altoTemp
+            cmp contadorFor5, ax
+            jge finFor2
+        
+            pintar contadorFor3,contadorFor5,colorBlanco
+           
+        inc contadorFor5
+        jmp for2
+        finFor2: 
+        
+    
+    inc contadorFor3
+    jmp for
+    finFor: 
+         
+endm
+
+;///////////////////////////////// macro que imprime un numero mapeados que estan guardados en una matriz de numeros mapeados,
+imprimirNumeroVideo macro posX,posY,numeroImpVideo,col_video                             
+   local for,finFor,for2,finFor2,imprimirNumero,pintarPixelNumero,noPintarPixelNumero   ;pixel por pixel
+    
+    mov contadorFor3,0d            
+    for:
+      cmp contadorFor3,7d
+      jge finFor
+       
+       and ax,0d
+       and cx,0d
+       mov ax,numeroImpVideo
+       mov cx,7d
+       mul cx
+       add ax,contadorFor3
+       
+       obtenerValorVector valMatriz, vecNumerosVideo,ax
+            
+            and ax,0d
+            mov al,valMatriz
+            mov contadorFor4,0d 
+                       
+            for2:
+              cmp contadorFor4,5d
+              jge finFor2
+              
+              and dx,0              
+              mov cx,2d              
+              div cx
+              mov residuoTemporal,dl
+              mov cocienteTemporal,al  
+              
+              cmp residuoTemporal,1d
+              je pintarPixelNumero
+              jmp noPintarPixelNumero
+              
+              pintarPixelNumero:
+                    
+                    and dx,0d
+                    and cx,0d
+                    and ax,0d
+                    
+                    and contAuxImpNumMat3,0d
+                    and contAuxImpNumMat4,0d
+                    
+                    and bx,0d
+                    mov bx,contadorFor3
+                    mov contAuxImpNumMat3,bx
+                    
+                    and bx,0d
+                    mov bx,contadorFor4
+                    mov contAuxImpNumMat4,bx
+                    
+                    and bx,0d
+                    mov bx,posX
+                    add contadorFor4,bx
+                    
+                    and bx,0d
+                    mov bx,posY
+                    add contadorFor3,bx
+
+                    pintar contadorFor4,contadorFor3,col_video
+
+                    mov al,cocienteTemporal 
+                    
+                    and bx,0d
+                    mov bx,contAuxImpNumMat3
+                    mov contadorFor3,bx
+                    
+                    and bx,0d
+                    mov bx,contAuxImpNumMat4
+                    mov contadorFor4,bx
+                     
+                    
+              noPintarPixelNumero:
+               
+            inc contadorFor4
+            jmp for2
+            finFor2:
+
+    inc contadorFor3
+    jmp for
+    finFor:  
+
+endm
+
+;///////////////////////////////// macro que descompone un binario y lo imprime numero por numero en el modo de video
+imprimirBinarioVideo macro tempEspac,num_imp,color_numero_video
+    
+  local  dowhile, saldowhile ,cfor5 ,salfor5,soyMenorqNueve,noSoyMenorqNueve
+    
+; DOWHILE
+   mov ax,0d
+   mov ax,num_imp
+   mov auxImpPila,0
+ 
+   dowhile:
+     
+     and dx,0
+     mov cx,10d
+
+     div cx
+     inc auxImpPila
+     push dx
+        
+     cmp ax, 0d
+     jne dowhile
+     jmp saldowhile
+
+   saldowhile:
+   
+   cmp num_imp,9d
+   jle soyMenorqNueve
+   jmp noSoyMenorqNueve
+   
+   soyMenorqNueve:
+       add auxImpPila,1d
+       push 0d
+       
+   noSoyMenorqNueve:
+   
+   
+   ; CICLO FOR
+   mov cx, auxImpPila
+   mov contDigitosImp, 0
+   mov numResultado,0
+   
+   and bx,0d
+   mov bx, tempEspac
+   mov espaciadoColumnasVideo,bx
+   
+   cfor5:
+      cmp contDigitosImp, cx
+      jge salfor5
+      pop ax
+      mov numResultado,ax
+
+      imprimirNumeroVideo espaciadoColumnasVideo,varPruebaNumeros2,numResultado,color_numero_video
+      
+      add espaciadoColumnasVideo,5d
+      
+      mov cx, auxImpPila
+      inc contDigitosImp
+   jmp cfor5
+   salfor5:
+endm
+
+;///////////////////////////////// imprimir tabla de frecuencias
+imprimirTabla macro tamTabla
+    local for,finFor
+    mov espacInicial,5d
+    mov contadorNumTabla,0d
+    for:
+        and bx,0d
+        mov bx,tamTabla
+        cmp contadorNumTabla, bx
+        jge finFor
+
+        obtenerValorVector16Bits videoFrec, tablaFrecuencias,contadorNumTabla
+        obtenerValorVector16Bits videoNum, numeroFrecuencia,contadorNumTabla
+        
+        crearRectangulo espacInicial,26d,15d,videoFrec,1111b
+        
+        mov varPruebaNumeros2, 16d
+        imprimirBinarioVideo espacInicial,videoFrec,colorBlanco
+        
+        mov varPruebaNumeros2, 5d
+        imprimirBinarioVideo espacInicial,videoNum,colorBlanco
+
+        add espacInicial,20d
+
+    inc contadorNumTabla
+    jmp for
+    finFor:
+endm

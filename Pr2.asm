@@ -146,6 +146,48 @@ include macros.asm
     strMinR                 db 'Minimo: ',0
     strTablaR               db 'Tabla De Frecuencias: ',13,0 
     strTabulacionR          db '    ',0
+    ;////VARIABLES PARA GRAFICA DE BARRAS
+    anchoTemp               dw 0d
+    altoTemp                dw 0d
+    contadorFor3            dw 0d ;contador usado para cuando se crean rectangulos
+    contadorFor4            dw 0d ;contador usado para imprimir los numeros guardados en matriz de numeros
+    contadorFor5            dw 0d
+    residuoTemporal         db 0d
+    cocienteTemporal        db 0d
+    contAuxImpNumMat3       dw 0d
+    contAuxImpNumMat4       dw 0d
+    colorBlanco             db 0Fh
+    valMatriz               db 0d 
+    varPruebaNumeros        dw 0d 
+    varPruebaNumeros2       dw 0d
+    espaciadoColumnasVideo  dw 0d  
+    N_posX                  dw 0d
+    N_posY                  dw 0d
+    N_ancho                 dw 0d
+    N_alto                  dw 0d
+    ;color                   dw 0d
+    
+    ;///////////////// MATRIZ DE NUMEROS
+    vecNumerosVideo db 14, 17, 19, 21, 25, 17, 14 ;0
+                    db 16, 16, 16, 16, 20, 24, 16 ;1
+                    db 31, 2 , 4 , 8 , 17, 17, 14 ;2
+                    db 14, 17, 16, 12, 16, 17, 14 ;3
+                    db 8 , 8 , 31, 9 , 10, 12, 8  ;4
+                    db 14, 17, 16, 16, 15, 1 , 31 ;5
+                    db 14, 17, 17, 15, 1 , 17, 14 ;6
+                    db 4 , 4 , 4 , 4 , 8 , 16, 31 ;7
+                    db 14, 17, 17, 14, 17, 17, 14 ;8
+                    db 14, 17, 16, 30, 17, 17, 14 ;9
+    
+    ;///////////////// VIDEO
+    contadorNumTabla dw 0d
+    videoFrec        dw 0d
+    videoNum         dw 0d
+    espacInicial     dw 0d
+    valFrec          dw 0d
+    valFrec2         dw 0d
+    valNumFrec       dw 0d
+    valNumFrec2      dw 0d 
 .code 
 
 ;/////////////////////////////////
@@ -163,7 +205,7 @@ pausa MACRO                        ;macro que recibe una tecla para simular una 
    int 21h
 ENDM
 
-;///////////////////////////////// 
+;///////////////////////////////// macro que compara 2 strings
 compararCadenas macro comando_a_evaluar
     local iguales,diferentes,salirComparacionCadenas
     ;limpiando variables y registros
@@ -269,6 +311,21 @@ main proc
         cmp comandosIguales,1d
         je  comando_reporte
 
+        ;---COMANDO GRAFICO DE BARRAS ASCENDENTE
+        compararCadenas strGbarra_asc
+        cmp comandosIguales,1d
+        je  comando_graficaAsc
+        
+        ;---COMANDO GRAFICO DE BARRAS DESCENDENTE
+        compararCadenas strGbarra_desc
+        cmp comandosIguales,1d
+        je  comando_graficaDesc
+        
+        ;---COMANDO HISTOGRAMA
+        compararCadenas strGhist
+        cmp comandosIguales,1d
+        je  comando_gHist
+        
         ;---COMANDO SALIR 
         compararCadenas strSalir
         cmp comandosIguales,1d
@@ -435,17 +492,20 @@ main proc
                 
         jmp menu
     ;/////////////PARA COMANDO LIMPIAR
+
     comando_limpiar:
         limpiarPantalla
         jmp menu
     
     ;/////////////PARA COMANDO INFO
+
     comando_info:
         imprimir strConsola
         impS
         imprimir strEncabezado
         jmp menu
-    ;/////////////PARA COMANDO MAX    
+    ;/////////////PARA COMANDO MAX 
+
     comando_max:
         mov posValMax_Min,0d 
         mov ax,contVector
@@ -469,7 +529,8 @@ main proc
             impS
         jmp menu                  
         
-    ;/////////////PARA COMANDO MIN    
+    ;/////////////PARA COMANDO MIN
+
     comando_min:
         mov posValMax_Min,0d 
         imprimir strConsola
@@ -478,11 +539,13 @@ main proc
         impS
         jmp menu 
     ;/////////////PARA COMANDO PROMEDIO
+
     comando_prom:
         sumarNumerosVector
         hacerPromedio
         jmp menu
     ;/////////////PARA COMANDO MODA
+
     comando_cmoda:
         realizarFrecuencias                     ;realizando tabla de frecuencias
         comando_moda valModa,contFrecuencias    ;realizando ordenamiento para moda
@@ -492,6 +555,7 @@ main proc
         jmp menu
     
     ;/////////////PARA COMANDO MEDIANA    
+
     comando_cmediana:
         and ax,0d
         and dx,0d
@@ -542,6 +606,7 @@ main proc
         jmp menu 
         
     ;/////////////COMANDO REPORTE
+
     comando_reporte:
             ;creando archivo
             mov ah,3Ch
@@ -649,16 +714,64 @@ main proc
                 
         jmp menu
     ;/////////////ERROR DE COMANDO
+
     error_comando:
         imprimir strConsola
         imprimir strErrorComando
         impS
         jmp menu
     
+    ;/////////////PARA COMANDO GRAFICA ASC
+    comando_graficaAsc:
+        
+        
+        limpiarPantalla
+        
+        mov ah, 00h            ;limpiando parte alta de ax
+        mov al, 13h            ;llamando directiva de video
+        int 10h                ;iniciando modo video
+
+        realizarFrecuenciasAsc
+        imprimirTabla  contFrecuencias
+        pausa
+        limpiarPantalla
+        jmp menu
+    
+    ;/////////////PARA COMANDO GRAFICA DESC    
+    comando_graficaDesc:
+        
+        
+        limpiarPantalla
+        
+        mov ah, 00h            ;limpiando parte alta de ax
+        mov al, 13h            ;llamando directiva de video
+        int 10h                ;iniciando modo video
+
+        realizarFrecuenciasDesc
+        imprimirTabla  contFrecuencias
+        pausa
+        limpiarPantalla
+        jmp menu
+        
+    ;/////////////PARA COMANDO HISTOGRAMA    
+    comando_gHist:
+        
+        
+        limpiarPantalla
+        
+        mov ah, 00h              ;limpiando parte alta de ax
+        mov al, 13h            ;llamando directiva de video
+        int 10h                ;iniciando modo video
+
+        realizarHistograma
+        imprimirTabla  contFrecuencias
+        pausa
+        limpiarPantalla
+        jmp menu
+        
     ;/////////////PARA COMANDO SALIR
     salir:
         .exit
-    
        
 main endp
 end main

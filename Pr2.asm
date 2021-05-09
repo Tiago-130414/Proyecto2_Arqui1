@@ -312,7 +312,7 @@ main proc
         cmp comandosIguales,1d
         je  comando_cmediana
         
-        ---COMANDO MODA
+        ;---COMANDO MODA
         compararCadenas strModa
         cmp comandosIguales,1d
         je  comando_cmoda
@@ -741,8 +741,10 @@ main proc
         mov ah, 00h            ;limpiando parte alta de ax
         mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-        ordenarBurbuja
-        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        ;ordenarBurbuja
+        ;obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        realizarFrecuenciasDesc
+        obtenerValorVector16Bits numMaxResc, tablaFrecuencias,0d
         realizarFrecuenciasAsc
         imprimirTabla  contFrecuencias,numMaxResc
         pausa
@@ -758,9 +760,11 @@ main proc
         mov ah, 00h            ;limpiando parte alta de ax
         mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-        ordenarBurbuja
-        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        ;ordenarBurbuja
+        ;obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        
         realizarFrecuenciasDesc
+        obtenerValorVector16Bits numMaxResc, tablaFrecuencias,0d
         imprimirTabla  contFrecuencias,numMaxResc
         pausa
         limpiarPantalla
@@ -775,8 +779,11 @@ main proc
         mov ah, 00h              ;limpiando parte alta de ax
         mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-        ordenarBurbuja
-        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        ;ordenarBurbuja
+        ;obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
+        
+        realizarFrecuenciasDesc
+        obtenerValorVector16Bits numMaxResc, tablaFrecuencias,0d
         realizarHistograma
         imprimirTabla  contFrecuencias,numMaxResc
 

@@ -188,6 +188,17 @@ include macros.asm
     valFrec2         dw 0d
     valNumFrec       dw 0d
     valNumFrec2      dw 0d 
+    ;////
+    contPrueba       dw 0d 
+    contPrueba2      dw 0d
+    posicionX        dw 0d
+    posicionY        dw 0d 
+    contPrueba3      dw 0d 
+    posInicio        dw 0d 
+    alt              dw 0d
+    numMaxResc       dw 0d ;num Max reescalado
+    alturaResc       dw 0d
+    auxPosNumV       dw 0d
 .code 
 
 ;/////////////////////////////////
@@ -301,7 +312,7 @@ main proc
         cmp comandosIguales,1d
         je  comando_cmediana
         
-        ;---COMANDO MODA
+        ---COMANDO MODA
         compararCadenas strModa
         cmp comandosIguales,1d
         je  comando_cmoda
@@ -728,11 +739,12 @@ main proc
         limpiarPantalla
         
         mov ah, 00h            ;limpiando parte alta de ax
-        mov al, 13h            ;llamando directiva de video
+        mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-
+        ordenarBurbuja
+        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
         realizarFrecuenciasAsc
-        imprimirTabla  contFrecuencias
+        imprimirTabla  contFrecuencias,numMaxResc
         pausa
         limpiarPantalla
         jmp menu
@@ -744,11 +756,12 @@ main proc
         limpiarPantalla
         
         mov ah, 00h            ;limpiando parte alta de ax
-        mov al, 13h            ;llamando directiva de video
+        mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-
+        ordenarBurbuja
+        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
         realizarFrecuenciasDesc
-        imprimirTabla  contFrecuencias
+        imprimirTabla  contFrecuencias,numMaxResc
         pausa
         limpiarPantalla
         jmp menu
@@ -760,11 +773,13 @@ main proc
         limpiarPantalla
         
         mov ah, 00h              ;limpiando parte alta de ax
-        mov al, 13h            ;llamando directiva de video
+        mov al, 12h            ;llamando directiva de video
         int 10h                ;iniciando modo video
-
+        ordenarBurbuja
+        obtenerValorVector16Bits numMaxResc, vecNumeros,contVector
         realizarHistograma
-        imprimirTabla  contFrecuencias
+        imprimirTabla  contFrecuencias,numMaxResc
+
         pausa
         limpiarPantalla
         jmp menu

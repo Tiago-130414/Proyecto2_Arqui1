@@ -547,7 +547,7 @@ realizarFrecuenciasDesc macro
 	finFor: 
 endm
 
-;///////////////////////////////// macro que hace la tabla de frecuencias descendente
+;///////////////////////////////// macro que hace la tabla de frecuencias ascendente
 realizarFrecuenciasAsc macro 
    local for,for2,finFor,finFor2,intercambio,finIf
 
@@ -609,7 +609,7 @@ realizarFrecuenciasAsc macro
 	finFor: 
 endm
 
-;///////////////////////////////// macro que hace la tabla de frecuencias descendente
+;///////////////////////////////// macro que hace el histograma de la tabla de frecuencias
 realizarHistograma macro 
    local for,for2,finFor,finFor2,intercambio,finIf
 
@@ -957,10 +957,46 @@ pintar macro posX,posY,color
   and dx,0d
   mov al, color   ;asignando el color
   mov cx, posX    ;asignando la columna - X
-  mov dx, 199d    ;479d,199d
+  mov dx, 479d    ;479d,199d
   sub dx, posY    ;asignando la fila - y
   mov ah, 0ch     ;cambio de color al pixel
   int 10h         ;pintando pixel.    
+endm
+
+pintarCuadrado macro X,Y,ancho,alto,color
+    local for,finFor,for2,finFor2        
+
+    mov contPrueba,0d
+    for:
+        mov ax,alto
+        cmp contPrueba, ax
+        jge finFor
+
+        mov contPrueba2,0d
+        for2:
+            mov ax,ancho
+            cmp contPrueba2, ax
+            jge finFor2
+
+            mov ax,contPrueba2
+            add ax,X
+            mov posicionX,ax
+
+            mov ax,contPrueba
+            add ax,Y
+            mov posicionY,ax
+
+            pintar posicionX,posicionY,color
+
+            inc contPrueba2
+        jmp for2
+
+        finFor2:
+
+        inc contPrueba
+    jmp for
+
+    finFor:
 endm
 
 ;///////////////////////////////// macro que escribe un rectangulo sobre el modo de video, pintando pixel por pixel
@@ -996,10 +1032,10 @@ crearRectangulo macro posX2,posY2,ancho2,alto2,color2
     add bx,alto2
     mov altoTemp,bx
 
-    xor bx,bx
-    mov bx,anchoTemp
+    
     for:
-        
+        and bx,0d
+        mov bx,anchoTemp
         cmp contadorFor3, bx
         jge finFor
 
@@ -1177,7 +1213,7 @@ imprimirBinarioVideo macro tempEspac,num_imp,color_numero_video
 endm
 
 ;///////////////////////////////// imprimir tabla de frecuencias
-imprimirTabla macro tamTabla
+imprimirTabla macro tamTabla,numMax
     local for,finFor
     mov espacInicial,5d
     mov contadorNumTabla,0d
@@ -1190,15 +1226,29 @@ imprimirTabla macro tamTabla
         obtenerValorVector16Bits videoFrec, tablaFrecuencias,contadorNumTabla
         obtenerValorVector16Bits videoNum, numeroFrecuencia,contadorNumTabla
         
-        crearRectangulo espacInicial,26d,15d,videoFrec,1111b
-        
-        mov varPruebaNumeros2, 16d
-        imprimirBinarioVideo espacInicial,videoFrec,colorBlanco
-        
-        mov varPruebaNumeros2, 5d
-        imprimirBinarioVideo espacInicial,videoNum,colorBlanco
+        and ax,0d
+        mov ax,espacInicial
+        add ax,5d
+        mov auxPosNumV,ax
 
-        add espacInicial,20d
+        mov varPruebaNumeros2, 5d
+        imprimirBinarioVideo auxPosNumV,videoNum,colorBlanco
+
+        mov varPruebaNumeros2, 16d
+        imprimirBinarioVideo auxPosNumV,videoFrec,colorBlanco
+        
+        and ax,0d
+        and bx,0d
+        mov ax,videoFrec
+        mov bx,440
+        mul bx
+        mov bx,numMax
+        div bx
+        mov alturaResc,ax
+
+        pintarCuadrado espacInicial,26d,25d,alturaResc,1111b
+
+        add espacInicial,30d
 
     inc contadorNumTabla
     jmp for
